@@ -29,9 +29,6 @@ public class CreateFieldMockQuickFix extends CreateVarFromUsageFix {
         if (!super.isAvailableImpl(offset)) return false;
         if(myReferenceExpression.isQualified()) return false;
         PsiElement scope = PsiTreeUtil.getParentOfType(myReferenceExpression, PsiModifierListOwner.class);
-        if (scope instanceof PsiAnonymousClass) {
-            scope = PsiTreeUtil.getParentOfType(scope, PsiModifierListOwner.class, true);
-        }
         // todo: check if mockito library is used in module
         return scope instanceof PsiMethod || scope instanceof PsiClassInitializer ||
                 scope instanceof PsiLocalVariable;

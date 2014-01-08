@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleSettingsManager;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.util.PsiTypesUtil;
 import com.intellij.psi.util.PsiUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +25,7 @@ public class CreateLocalMockQuickFix extends CreateVarFromUsageFix {
 
     @Override
     public String getText(String varName) {
-        return "Create Inline Mock '" + varName + "'" ;
+        return "Create Local Mock '" + varName + "'" ;
     }
 
     @Override
@@ -32,11 +33,9 @@ public class CreateLocalMockQuickFix extends CreateVarFromUsageFix {
         if (!super.isAvailableImpl(offset)) return false;
         if(myReferenceExpression.isQualified()) return false;
         PsiElement scope = PsiTreeUtil.getParentOfType(myReferenceExpression, PsiModifierListOwner.class);
-        if (scope instanceof PsiAnonymousClass) {
-            scope = PsiTreeUtil.getParentOfType(scope, PsiModifierListOwner.class, true);
-        }
         // todo: check if mockito library is used in module
-        return scope instanceof PsiLocalVariable;
+        return scope instanceof PsiMethod || scope instanceof PsiClassInitializer ||
+                scope instanceof PsiLocalVariable;
     }
 
     @Override
@@ -61,7 +60,7 @@ public class CreateLocalMockQuickFix extends CreateVarFromUsageFix {
         PsiExpression[] expressions = CreateFromUsageUtils.collectExpressions(myReferenceExpression, PsiMember.class, PsiFile.class);
         PsiStatement anchor = getAnchor(expressions);
 
-        PsiExpression initializer = factory.createExpressionFromText("mock(" + type.getCanonicalText() + ".class)", null);
+        PsiExpression initializer = factory.createExpressionFromText("mock(" + PsiTypesUtil.getPsiClass(type).getName() + ".class)", null);
         PsiDeclarationStatement decl = factory.createVariableDeclarationStatement(varName, type, initializer);
 
         PsiVariable var = (PsiVariable)decl.getDeclaredElements()[0];
